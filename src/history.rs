@@ -83,7 +83,7 @@ impl SafariHistory {
                     "Failed to read base directory {}: {:?}",
                     base_directory, err
                 );
-                return Err(SafariError::PathError);
+                return Err(SafariError::Path);
             }
         }
         Ok(safari_history)
@@ -101,7 +101,7 @@ impl SafariHistory {
             Ok(connect) => connect,
             Err(err) => {
                 error!("Failed to read Safari SQLITE history file {:?}", err);
-                return Err(SafariError::SQLITEParseError);
+                return Err(SafariError::SqliteParse);
             }
         };
 
@@ -158,7 +158,7 @@ impl SafariHistory {
                     "Failed to get Safari history data from SQLITE file: {:?}",
                     err
                 );
-                Err(SafariError::SQLITEParseError)
+                Err(SafariError::SqliteParse)
             }
         }
     }

@@ -14,25 +14,27 @@ pub struct Downloads {
     pub download_id: String,
     pub download_entry_date: u64,
     pub download_entry_finish: u64,
-    pub path: Vec<String>,          // Path to binary to run
-    pub cnid_path: Vec<i64>,        // Path represented as Catalog Node ID
-    pub creation: f64,              // Created timestamp of binary target
-    pub volume_path: String,        // Root
-    pub volume_url: String,         // URL type
-    pub volume_name: String,        // Name of Volume
-    pub volume_uuid: String,        // Volume UUID string
-    pub volume_size: i64,           // Size of Volume
-    pub volume_creation: f64,       // Created timestamp of Volume
-    pub volume_flag: Vec<u64>,      // Volume Property flags
-    pub volume_root: bool,          // If Volume is filesystem root
-    pub localized_name: String,     // Optional localized name of target binary
-    pub security_extension: String, // Optional Security extension of target binary
-    pub target_flags: Vec<u64>,     // Resource property flags
-    pub username: String,           // Username related to bookmark
-    pub folder_index: i64,          // Folder index number
-    pub uid: i32,                   // User UID
-    pub creation_options: i32,      // Bookmark creation options
-    pub has_executable_flag: bool,  // Can target be executed
+    pub path: Vec<String>,             // Path to binary to run
+    pub cnid_path: Vec<i64>,           // Path represented as Catalog Node ID
+    pub creation: f64,                 // Created timestamp of binary target
+    pub volume_path: String,           // Root
+    pub volume_url: String,            // URL type
+    pub volume_name: String,           // Name of Volume
+    pub volume_uuid: String,           // Volume UUID string
+    pub volume_size: i64,              // Size of Volume
+    pub volume_creation: f64,          // Created timestamp of Volume
+    pub volume_flag: Vec<u64>,         // Volume Property flags
+    pub volume_root: bool,             // If Volume is filesystem root
+    pub localized_name: String,        // Optional localized name of target binary
+    pub security_extension_rw: String, // Optional Security extension of target binary
+    pub security_extension_ro: String, // Optional Security extension of target binary
+    pub target_flags: Vec<u64>,        // Resource property flags
+    pub username: String,              // Username related to bookmark
+    pub folder_index: i64,             // Folder index number
+    pub uid: i32,                      // User UID
+    pub creation_options: i32,         // Bookmark creation options
+    pub has_executable_flag: bool,     // Can target be executed
+    pub file_ref_flag: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -88,7 +90,7 @@ impl SafariDownloads {
                     "Failed to read base directory {}: {:?}",
                     base_directory, err
                 );
-                return Err(SafariError::PathError);
+                return Err(SafariError::Path);
             }
         }
 
@@ -103,7 +105,7 @@ impl SafariDownloads {
             Ok(results) => results,
             Err(err) => {
                 error!("Failed to parse PLIST file at {}: {:?}", path, err);
-                return Err(SafariError::PLIST);
+                return Err(SafariError::Plist);
             }
         };
         let mut safari_downloads: Vec<Downloads> = Vec::new();
@@ -119,7 +121,7 @@ impl SafariDownloads {
                         "Failed to parse Safari downloads bookmark data at {}: {:?}",
                         path, err
                     );
-                    return Err(SafariError::PLIST);
+                    return Err(SafariError::Plist);
                 }
             };
             let safari_data = Downloads {
@@ -142,13 +144,15 @@ impl SafariDownloads {
                 volume_flag: bookmark.volume_flag,
                 volume_root: bookmark.volume_root,
                 localized_name: bookmark.localized_name,
-                security_extension: bookmark.security_extension,
+                security_extension_rw: bookmark.security_extension_rw,
+                security_extension_ro: bookmark.security_extension_ro,
                 target_flags: bookmark.target_flags,
                 username: bookmark.username,
                 folder_index: bookmark.folder_index,
                 uid: bookmark.uid,
                 creation_options: bookmark.creation_options,
                 has_executable_flag: bookmark.is_executable,
+                file_ref_flag: bookmark.file_ref_flag,
             };
             safari_downloads.push(safari_data);
         }
@@ -175,6 +179,55 @@ mod tests {
         test_location.push("tests/test_data/Downloads.plist");
         let test_path: &str = &test_location.display().to_string();
         let results = SafariDownloads::get_downloads(test_path).unwrap();
-        assert!(results.len() > 1);
+        assert_eq!(results.len(), 3);
+
+        assert_eq!(results[0].source_url, "https://objects.githubusercontent.com/github-production-release-asset-2e65be/49609581/97b2b465-4242-42c6-ae6f-16437ee71f12?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220626%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220626T180026Z&X-Amz-Expires=300&X-Amz-Signature=7f403834d25930916a71894a1960b7624e6479cdd493c40b96644d4a01ffdf41&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=49609581&response-content-disposition=attachment%3B%20filename%3Dpowershell-7.2.5-osx-arm64.pkg&response-content-type=application%2Foctet-stream");
+        assert_eq!(
+            results[0].download_path,
+            "/Users/puffycid/Downloads/powershell-7.2.5-osx-arm64.pkg"
+        );
+        assert_eq!(
+            results[0].sandbox_id,
+            "DBA9EBA4-D23B-43C5-9DEB-131566E7BD8B"
+        );
+        assert_eq!(results[0].download_bytes, 63055607);
+        assert_eq!(
+            results[0].download_id,
+            "835D414A-492E-4DBB-BD6B-E8FACD4ED84D"
+        );
+        assert_eq!(results[0].download_entry_date, 1656266417);
+        assert_eq!(results[0].download_entry_finish, 1656266422);
+        assert_eq!(
+            results[0].path,
+            [
+                "Users",
+                "puffycid",
+                "Downloads",
+                "powershell-7.2.5-osx-arm64.pkg"
+            ]
+        );
+        assert_eq!(results[0].cnid_path, [21327, 360459, 360510, 37719400]);
+        assert_eq!(results[0].volume_path, "/");
+        assert_eq!(results[0].creation, 677959217.8519708);
+        assert_eq!(results[0].volume_url, "file:///");
+        assert_eq!(results[0].volume_name, "Macintosh HD");
+        assert_eq!(
+            results[0].volume_uuid,
+            "96FB41C0-6CE9-4DA2-8435-35BC19C735A3"
+        );
+        assert_eq!(results[0].volume_size, 2000662327296);
+        assert_eq!(results[0].volume_flag, [4294967425, 4294972399, 0]);
+        assert_eq!(results[0].volume_creation, 667551907.0);
+        assert_eq!(results[0].volume_root, true);
+        assert_eq!(results[0].localized_name, "");
+        assert_eq!(results[0].security_extension_ro, "");
+        assert_eq!(results[0].security_extension_rw, "");
+        assert_eq!(results[0].target_flags, [1, 15, 0]);
+        assert_eq!(results[0].username, "puffycid");
+        assert_eq!(results[0].folder_index, 2);
+        assert_eq!(results[0].uid, 501);
+        assert_eq!(results[0].creation_options, 671094784);
+        assert_eq!(results[0].has_executable_flag, false);
+        assert_eq!(results[0].file_ref_flag, false);
     }
 }

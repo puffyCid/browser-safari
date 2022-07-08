@@ -25,7 +25,7 @@ fn test_safari_bad_history_db() {
 }
 
 #[test]
-#[should_panic(expected = "PLIST")]
+#[should_panic(expected = "Plist")]
 fn test_safari_not_plist() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/badfile.txt");
@@ -33,7 +33,7 @@ fn test_safari_not_plist() {
 }
 
 #[test]
-#[should_panic(expected = "PLIST")]
+#[should_panic(expected = "Plist")]
 fn test_safari_bad_plist() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/Bad.plist");

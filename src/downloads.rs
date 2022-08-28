@@ -3,7 +3,7 @@ use std::{fs::read_dir, path::Path};
 use log::{error, info, warn};
 use serde::Serialize;
 
-use crate::{downloads_plist::DownloadsPlist, error::SafariError};
+use crate::{downloads_plist::DownloadsPlist, error::SafariError, size::get_file_size};
 
 #[derive(Debug, Serialize)]
 pub struct Downloads {
@@ -61,7 +61,7 @@ impl SafariDownloads {
                                 format!("{}{}", entry_result.path().display(), downloads_path);
                             let full_path = Path::new(&path);
                             // Make sure the downloads file exists
-                            if !full_path.is_file() {
+                            if !full_path.is_file() || !get_file_size(&path) {
                                 continue;
                             }
                             info!("Parsing file path: {}", path);
